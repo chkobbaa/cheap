@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react"
+import HCaptcha from "@hcaptcha/react-hcaptcha"
 
 function LoginForm() {
     const router = useRouter()
@@ -21,19 +22,45 @@ function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (!captchaToken) {
+            setError("Veuillez compléter le captcha")
+            return
+        }
+
         setLoading(true)
         setError("")
 
-        const { error } = await signIn(email, password)
+        try {
+            // Verify captcha
+            const verifyRes = await fetch("/api/auth/verify-captcha", {
+                method: "POST",
+                body: JSON.stringify({ token: captchaToken }),
+                headers: { "Content-Type": "application/json" },
+            })
+            const verifyData = await verifyRes.json()
 
-        if (error) {
-            setError(error.message)
+            if (!verifyData.success) {
+                setError("Échec de la vérification du captcha. Veuillez réessayer.")
+                setLoading(false)
+                return
+            }
+
+            const { error } = await signIn(email, password)
+
+            if (error) {
+                setError(error.message)
+                setLoading(false)
+            } else {
+                router.push(redirect)
+            }
+        } catch (err: any) {
+            setError("Une erreur est survenue. Veuillez réessayer.")
             setLoading(false)
-        } else {
-            router.push(redirect)
         }
     }
 
@@ -114,6 +141,14 @@ function LoginForm() {
                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
+                        </div>
+
+                        <div className="flex justify-center">
+                            <HCaptcha
+                                sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
+                                onVerify={(token) => setCaptchaToken(token)}
+                                onExpire={() => setCaptchaToken(null)}
+                            />
                         </div>
 
                         <Button

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Mail, Lock, User, Eye, EyeOff, Loader2, Store, ShoppingBag } from "lucide-react"
+import HCaptcha from "@hcaptcha/react-hcaptcha"
 
 export default function RegisterPage() {
     const router = useRouter()
@@ -20,9 +21,16 @@ export default function RegisterPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [success, setSuccess] = useState(false)
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (!captchaToken) {
+            setError("Veuillez compléter le captcha")
+            return
+        }
+
         setLoading(true)
         setError("")
 
@@ -32,15 +40,34 @@ export default function RegisterPage() {
             return
         }
 
-        const { error } = await signUp(email, password, {
-            display_name: name,
-        })
+        try {
+            // Verify captcha
+            const verifyRes = await fetch("/api/auth/verify-captcha", {
+                method: "POST",
+                body: JSON.stringify({ token: captchaToken }),
+                headers: { "Content-Type": "application/json" },
+            })
+            const verifyData = await verifyRes.json()
 
-        if (error) {
-            setError(error.message)
-            setLoading(false)
-        } else {
-            setSuccess(true)
+            if (!verifyData.success) {
+                setError("Échec de la vérification du captcha. Veuillez réessayer.")
+                setLoading(false)
+                return
+            }
+
+            const { error } = await signUp(email, password, {
+                display_name: name,
+            })
+
+            if (error) {
+                setError(error.message)
+                setLoading(false)
+            } else {
+                setSuccess(true)
+                setLoading(false)
+            }
+        } catch (err: any) {
+            setError("Une erreur est survenue. Veuillez réessayer.")
             setLoading(false)
         }
     }
@@ -156,6 +183,14 @@ export default function RegisterPage() {
                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
+                        </div>
+
+                        <div className="flex justify-center">
+                            <HCaptcha
+                                sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
+                                onVerify={(token) => setCaptchaToken(token)}
+                                onExpire={() => setCaptchaToken(null)}
+                            />
                         </div>
 
                         <Button
