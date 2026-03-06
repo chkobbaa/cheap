@@ -70,7 +70,7 @@ export default function DashboardPage() {
                     .select("views")
                     .eq("seller_id", user.id)
 
-                const totalViews = viewsData?.reduce((sum, l) => sum + (l.views || 0), 0) || 0
+                const totalViews = viewsData?.reduce((sum: number, l: any) => sum + (l.views || 0), 0) || 0
 
                 // Recent listings
                 const { data: recent } = await supabase
@@ -223,10 +223,10 @@ export default function DashboardPage() {
                                             className="w-full h-full object-cover"
                                         />
                                         <div className={`absolute top-2 right-2 rounded-full px-2 py-0.5 text-xs font-medium ${listing.status === "active"
-                                                ? "bg-success text-success-foreground"
-                                                : listing.status === "sold"
-                                                    ? "bg-blue-500 text-white"
-                                                    : "bg-secondary text-muted-foreground"
+                                            ? "bg-success text-success-foreground"
+                                            : listing.status === "sold"
+                                                ? "bg-blue-500 text-white"
+                                                : "bg-secondary text-muted-foreground"
                                             }`}>
                                             {listing.status}
                                         </div>

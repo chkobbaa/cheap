@@ -51,7 +51,7 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
                     table: "messages",
                     filter: `sender_id=eq.${partnerId}`,
                 },
-                (payload) => {
+                (payload: any) => {
                     if (payload.new.receiver_id === user.id) {
                         setMessages((prev) => [...prev, payload.new as Message])
                         // Mark as read immediately
@@ -175,8 +175,8 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
                             >
                                 <div
                                     className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isOwn
-                                            ? "bg-success text-success-foreground rounded-br-md"
-                                            : "bg-secondary text-foreground rounded-bl-md"
+                                        ? "bg-success text-success-foreground rounded-br-md"
+                                        : "bg-secondary text-foreground rounded-bl-md"
                                         }`}
                                 >
                                     <p className="text-sm">{msg.content}</p>

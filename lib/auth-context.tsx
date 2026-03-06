@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Use onAuthStateChange as the single source of truth
         // This avoids the "lock broken by steal" race condition
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
+            async (_event: any, session: Session | null) => {
                 setSession(session)
                 setUser(session?.user ?? null)
 
