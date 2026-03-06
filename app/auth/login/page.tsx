@@ -36,21 +36,7 @@ function LoginForm() {
         setError("")
 
         try {
-            // Verify captcha
-            const verifyRes = await fetch("/api/auth/verify-captcha", {
-                method: "POST",
-                body: JSON.stringify({ token: captchaToken }),
-                headers: { "Content-Type": "application/json" },
-            })
-            const verifyData = await verifyRes.json()
-
-            if (!verifyData.success) {
-                setError("Échec de la vérification du captcha. Veuillez réessayer.")
-                setLoading(false)
-                return
-            }
-
-            const { error } = await signIn(email, password)
+            const { error } = await signIn(email, password, captchaToken)
 
             if (error) {
                 setError(error.message)

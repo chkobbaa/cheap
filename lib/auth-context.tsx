@@ -23,8 +23,8 @@ interface AuthContextType {
     session: Session | null
     profile: Profile | null
     loading: boolean
-    signIn: (email: string, password: string) => Promise<{ error: any }>
-    signUp: (email: string, password: string, metadata?: { display_name?: string; role?: string }) => Promise<{ error: any }>
+    signIn: (email: string, password: string, captchaToken?: string) => Promise<{ error: any }>
+    signUp: (email: string, password: string, metadata?: { display_name?: string; role?: string }, captchaToken?: string) => Promise<{ error: any }>
     signInWithGoogle: () => Promise<{ error: any }>
     signOut: () => Promise<void>
     refreshProfile: () => Promise<void>
@@ -91,20 +91,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const signIn = async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const signIn = async (email: string, password: string, captchaToken?: string) => {
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+            options: {
+                captchaToken
+            }
+        })
         return { error }
     }
 
     const signUp = async (
         email: string,
         password: string,
-        metadata?: { display_name?: string; role?: string }
+        metadata?: { display_name?: string; role?: string },
+        captchaToken?: string
     ) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
+                emailRedirectTo: `${window.location.origin}/auth/callback`,
+                captchaToken,
                 data: {
                     display_name: metadata?.display_name || "",
                     full_name: metadata?.display_name || "",
